@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Saree Collections</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      background: transparent;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -10;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at bottom, #0d0d1a 0%, #000 100%);
+    }
+
+    #universe {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -5;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    h1 {
+      color: #ffd1dc;
+      text-align: center;
+      margin: 40px 0 20px;
+      font-size: 2.5rem;
+      text-shadow: 0 0 8px #ffb6c1, 0 0 15px #f0f;
+    }
+
+    .category-title {
+      font-size: 1.6rem;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .saree-card {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      border-radius: 10px;
+      backdrop-filter: blur(3px);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s ease;
+    }
+
+    .saree-card:hover {
+      transform: scale(1.02);
+    }
+
+    .saree-img-wrapper {
+      width: 100%;
+      height: 280px;
+      border: 2px solid #5be0ea;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .saree-img-wrapper img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+
+    .saree-img-wrapper:hover img {
+      transform: scale(1.05);
+    }
+
+    .price {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff7d6;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .saree-title {
+      text-align: center;
+      color: #f3c28a;
+      margin-top: 5px;
+    }
+
+    .modal-content {
+      background: transparent;
+      border: none;
+    }
+
+    #modalImage.zoomed {
+      transform: scale(1.6);
+      transition: 0.3s;
+      cursor: zoom-out;
+    }
+
+    .zoom-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 30px;
+      z-index: 1051;
+    }
+
+    .btn-cart {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+  font-size: 1rem;
+  background-color: #ffc107;
+  color: #000;
+  border-radius: 30px;
+  padding: 8px 14px;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+
+
+    .cart-modal .modal-content {
+      background-color: #111827;
+      color: #fff;
+      border-radius: 10px;
+    }
+
+    .cart-item img {
+      width: 60px;
+      height: auto;
+      border-radius: 5px;
+    }
+
+    .cart-item {
+      border-bottom: 1px solid #444;
+      padding: 10px 0;
+    }
+
+    .quantity-btn {
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      padding: 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<!-- Add this just after <body> tag -->
+    <div class="alert alert-warning text-center mb-0 py-2" style="font-weight: bold; font-size: 3rem;">
+        🎉 AHADAM SALE: Flat 20% OFF on All Sarees – Limited Time Offer! 🎁
+      </div>
+      
+<body>
+<canvas id="universe"></canvas>
+
+<div class="container">
+  <h1>Saree Collections</h1>
+
+  {% for category in categories %}
+    <div class="category-title">{{ category.name }}</div>
+    <div class="row g-4">
+      {% for saree in category.saree_set.all %}
+        <div class="col-6 col-sm-4 col-md-3">
+          <div class="saree-card">
+            <div class="saree-img-wrapper">
+              <img src="{{ saree.image.url }}" alt="Saree Image" class="img-thumbnail saree-click" data-bs-toggle="modal" data-bs-target="#imageModal" data-img="{{ saree.image.url }}">
+            </div>
+            {% if saree.name %}<div class="saree-title">{{ saree.name }}</div>{% endif %}
+            <div class="price">₹{{ saree.price }}</div>
+            <div class="text-center mt-2">
+              <button class="btn btn-sm btn-outline-warning add-to-cart-btn"
+                data-id="{{ saree.id }}"
+                data-name="{{ saree.name }}"
+                data-img="{{ saree.image.url }}"
+                data-price="{{ saree.price }}">
+                🛒 Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-center">No sarees uploaded in this category yet.</p>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Modal for image zoom -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <button type="button" class="btn-close btn-close-white ms-auto me-2 mt-2" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img src="" id="modalImage" class="img-fluid rounded shadow" style="max-height: 80vh;">
+        <button class="btn btn-light zoom-btn" id="zoomToggleBtn">🔍 Zoom</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Button -->
+<button class="btn btn-warning btn-cart" data-bs-toggle="modal" data-bs-target="#cartModal">
+  🛒 View Cart (<span id="cart-count">0</span>)
+</button>
+
+<!-- Cart Modal -->
+<div class="modal fade cart-modal" id="cartModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">🛍️ Your Cart</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="cart-items"></div>
+<div class="alert alert-info mt-3 text-center" role="alert">
+  📸 Please take a screenshot of your cart and send it to us on WhatsApp to place the order.
+</div>
+
+        <hr>
+        <h5>Total: ₹<span id="cart-total">0</span></h5>
+      </div>
+      <div class="modal-footer">
+        <a href="#" id="whatsapp-link" target="_blank" class="btn btn-success">📤 Place Order on WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- (Keep your full HTML as you already have it, just update the script section below.) -->
+
+<script>
+  const canvas = document.getElementById("universe");
+  const ctx = canvas.getContext("2d");
+  let stars = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+  }
+  function initStars() {
+    stars = [];
+    for (let i = 0; i < 200; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.5, dx: (Math.random() - 0.5) * 0.2, dy: Math.random() * 0.5 + 0.2, opacity: Math.random() });
+    }
+  }
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(star => {
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${star.opacity})`;
+      ctx.fill();
+      star.x += star.dx;
+      star.y += star.dy;
+      star.opacity += (Math.random() - 0.5) * 0.02;
+      if (star.y > canvas.height || star.opacity <= 0 || star.opacity > 1) {
+        star.x = Math.random() * canvas.width;
+        star.y = 0;
+        star.opacity = Math.random();
+      }
+    });
+    requestAnimationFrame(drawStars);
+  }
+  resizeCanvas();
+  initStars();
+  drawStars();
+  window.addEventListener("resize", () => { resizeCanvas(); initStars(); });
+  window.addEventListener("scroll", () => { resizeCanvas(); });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const images = document.querySelectorAll(".saree-click");
+    const modalImage = document.getElementById("modalImage");
+    const zoomBtn = document.getElementById("zoomToggleBtn");
+
+    images.forEach(img => {
+      img.addEventListener("click", function () {
+        modalImage.src = this.getAttribute("data-img");
+        modalImage.classList.remove("zoomed");
+        zoomBtn.textContent = "🔍 Zoom";
+      });
+    });
+    zoomBtn.addEventListener("click", function () {
+      modalImage.classList.toggle("zoomed");
+      zoomBtn.textContent = modalImage.classList.contains("zoomed") ? "🔽 Zoom Out" : "🔍 Zoom";
+    });
+  });
+
+  let cart = [];
+
+  function updateCartDisplay() {
+    const cartItems = document.getElementById("cart-items");
+    const cartCount = document.getElementById("cart-count");
+    const cartTotal = document.getElementById("cart-total");
+    const whatsappLink = document.getElementById("whatsapp-link");
+
+    cartItems.innerHTML = '';
+    let total = 0;
+    cart.forEach((item, index) => {
+      total += item.price * item.qty;
+      cartItems.innerHTML += `
+        <div class="d-flex justify-content-between align-items-center cart-item">
+          <img src="${item.img}" alt="" />
+          <div class="flex-grow-1 ms-3">
+            <strong>${item.name}</strong><br>
+            ₹${item.price} × 
+            <button class="btn btn-sm btn-light quantity-btn" onclick="updateQty(${index}, -1)">-</button>
+            <span class="mx-1">${item.qty}</span>
+            <button class="btn btn-sm btn-light quantity-btn" onclick="updateQty(${index}, 1)">+</button>
+          </div>
+          <div>₹${item.price * item.qty}</div>
+        </div>
+      `;
+    });
+    cartCount.textContent = cart.reduce((sum, i) => sum + i.qty, 0);
+    cartTotal.textContent = total;
+
+    // ✅ Construct WhatsApp message with image links
+    let msg = `Hi, I'd like to order:\n\n` + cart.map(i => 
+      `${i.name} - ₹${i.price} × ${i.qty} = ₹${i.price * i.qty}\nImage: ${window.location.origin}${i.img}`
+    ).join("\n\n") + `\n\nTotal: ₹${total}`;
+
+    whatsappLink.href = `https://wa.me/919121425295?text=${encodeURIComponent(msg)}`;
+  }
+
+  function updateQty(index, change) {
+    cart[index].qty += change;
+    if (cart[index].qty <= 0) cart.splice(index, 1);
+    updateCartDisplay();
+  }
+
+  document.querySelectorAll(".add-to-cart-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const name = btn.dataset.name;
+      const img = btn.dataset.img;
+      const price = parseFloat(btn.dataset.price);
+      const existing = cart.find(item => item.id === id);
+      if (existing) existing.qty += 1;
+      else cart.push({ id, name, img, price, qty: 1 });
+      updateCartDisplay();
+    });
+  });
+</script>
+
+<!-- Footer -->
+<footer class="text-center text-lg-start mt-5">
+    <div class="container p-4">
+      <div class="row">
+        <div class="col-md-4 text-start">
+          <h5>📍 Address</h5>
+          <p>
+            Pattu Sarees<br>
+            Shiridi Nagar, YSR Circle, Somandepalli<br>
+            Andhra Pradesh – 515122
+          </p>
+          <a href="https://maps.app.goo.gl/ujkQUv8USqhfxnZu9?g_st=aw" target="_blank" class="btn btn-outline-light btn-sm">View Map</a>
+        </div>
+        <div class="col-md-4 text-center">
+          <h5>📱 WhatsApp Group</h5>
+          <a href="https://chat.whatsapp.com/DV1MTWaxGt5Edd1UOeNjYN" target="_blank" class="btn btn-success btn-sm">Join Now</a>
+        </div>
+        <div class="col-md-4 text-end">
+          <h5>📸 Instagram</h5>
+          <a href="https://www.instagram.com/pattu_sarees47" target="_blank" class="btn btn-danger btn-sm">@pattu_sarees47</a>
+        </div>
+      </div>
+    </div>
+    <div class="text-center p-3 small bg-dark">
+      © {{ now|date:"Y" }} Sree Silks. All rights reserved.
+    </div>
+  </footer>
+
+</body>
+</html>
